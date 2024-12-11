@@ -41,6 +41,7 @@ if TYPE_CHECKING:
 
     from habluetooth import BluetoothServiceInfo
     from homeassistant.components import zeroconf
+    from homeassistant.components.usb import UsbServiceInfo
     from homeassistant.components.zeroconf import ZeroconfServiceInfo
     from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
     from homeassistant.core import HomeAssistant
@@ -142,6 +143,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         self._bluetooth_discovery_info: BluetoothServiceInfo | None = None
         self._zeroconf_discovery_info: ZeroconfServiceInfo | None = None
+        self._usb_discovery_info: UsbServiceInfo | None = None
         self.user_input_from_step_user: dict = None
         self.data = {}
         self.options = {}
@@ -332,6 +334,57 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=_step_user_data_connection_tcp_schema_factory(
                 host=self.data.get(CONF_CONNECTION_TCP_HOST, ""),
                 port=self.data.get(CONF_CONNECTION_TCP_PORT, None),
+            ),
+            description_placeholders=self.context["title_placeholders"],
+        )
+
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
+        self._usb_discovery_info = discovery_info
+
+        self.data = {
+            CONF_CONNECTION_TYPE: ConnectionType.SERIAL.value,
+            CONF_CONNECTION_SERIAL_PORT: discovery_info.device,
+        }
+
+        all_entries = self.hass.config_entries.async_entries(DOMAIN, include_disabled=True, include_ignore=True)
+        matching_entry = next(
+            (
+                c
+                for c in all_entries
+                if c.data.get(CONF_CONNECTION_TYPE) == self.data[CONF_CONNECTION_TYPE]
+                and (c.data.get(CONF_CONNECTION_SERIAL_PORT) == self.data[CONF_CONNECTION_SERIAL_PORT])
+            ),
+            None,
+        )
+        if matching_entry:
+            # extract unique id from existing config entry (so that we don't need to connect to node to get node id
+            # and might be interrupting the connection)
+            await self.async_set_unique_id(matching_entry.unique_id)
+
+        self._abort_if_unique_id_configured()
+
+        return await self.async_step_discovery_usb_confirm()
+
+    async def async_step_discovery_usb_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        device_name = self._usb_discovery_info.manufacturer
+        if self._usb_discovery_info.description:
+            device_name += " " + self._usb_discovery_info.description
+        title = f"{device_name} ({self._usb_discovery_info.device})"
+        errors: dict[str, str] = {}
+
+        self.context["title_placeholders"] = {
+            "name": title,
+        }
+
+        if user_input is not None:
+            res = await self._handle_connection_user_input(errors, user_input)
+            if res is not None:
+                return res
+
+        return self.async_show_form(
+            step_id="discovery_usb_confirm",
+            data_schema=_step_user_data_connection_serial_schema_factory(
+                device=self.data.get(CONF_CONNECTION_SERIAL_PORT, ""),
             ),
             description_placeholders=self.context["title_placeholders"],
         )

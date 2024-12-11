@@ -2,7 +2,10 @@
   "domain": "meshtastic",
   "name": "Meshtastic",
   "after_dependencies": [
-        "bluetooth","bluetooth_adapters", "zeroconf"
+    "bluetooth",
+    "bluetooth_adapters",
+    "zeroconf",
+    "usb"
   ],
   "bluetooth": [
     {
@@ -10,13 +13,423 @@
       "connectable": true
     }
   ],
-  "codeowners": ["@broglep"],
+  "codeowners": [
+    "@broglep"
+  ],
   "config_flow": true,
   "documentation": "https://github.com/broglep/homeassistant-meshtastic",
   "integration_type": "hub",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/broglep/homeassistant-meshtastic/issues",
-  "requirements": ["meshtastic==2.5.5", "pyserial-asyncio==0.6"],
+  "requirements": [
+    "meshtastic==2.5.5",
+    "pyserial-asyncio==0.6"
+  ],
+  "usb": [
+    {
+      "_name": "TTGO eink (Adafruit BSP)",
+      "vid": "239A",
+      "pid": "4405"
+    },
+    {
+      "_name": "TTGO eink (Adafruit BSP)",
+      "vid": "239A",
+      "pid": "0029"
+    },
+    {
+      "_name": "TTGO eink (Adafruit BSP)",
+      "vid": "239A",
+      "pid": "002A"
+    },
+    {
+      "_name": "A modified NRF52840-DK devboard (Adafruit BSP)",
+      "vid": "239A",
+      "pid": "4404"
+    },
+    {
+      "_name": "Heltec nrf (Adafruit BSP)",
+      "vid": "239A",
+      "pid": "4405"
+    },
+    {
+      "_name": "Heltec nrf (Adafruit BSP)",
+      "vid": "239A",
+      "pid": "0029"
+    },
+    {
+      "_name": "Heltec nrf (Adafruit BSP)",
+      "vid": "239A",
+      "pid": "002A"
+    },
+    {
+      "_name": "Canary (Adafruit BSP)",
+      "vid": "239A",
+      "pid": "4405"
+    },
+    {
+      "_name": "Canary (Adafruit BSP)",
+      "vid": "239A",
+      "pid": "009F"
+    },
+    {
+      "_name": "ESP32-S3-WROOM-1-N4 (4 MB Flash, No PSRAM)",
+      "vid": "303A",
+      "pid": "1001"
+    },
+    {
+      "_name": "Seeed WIO WM1110",
+      "vid": "239A",
+      "pid": "8029"
+    },
+    {
+      "_name": "Seeed WIO WM1110",
+      "vid": "239A",
+      "pid": "0029"
+    },
+    {
+      "_name": "Seeed WIO WM1110",
+      "vid": "239A",
+      "pid": "002A"
+    },
+    {
+      "_name": "Seeed WIO WM1110",
+      "vid": "239A",
+      "pid": "802A"
+    },
+    {
+      "_name": "Heltec Vision Master t190",
+      "vid": "303A",
+      "pid": "1001"
+    },
+    {
+      "_name": "Heltec Vision Master t190",
+      "vid": "303A",
+      "pid": "0002"
+    },
+    {
+      "_name": "TTGO eink (Adafruit BSP)",
+      "vid": "239A",
+      "pid": "4405"
+    },
+    {
+      "_name": "ProMicro compatible nRF52840",
+      "vid": "239A",
+      "pid": "00B3"
+    },
+    {
+      "_name": "ProMicro compatible nRF52840",
+      "vid": "239A",
+      "pid": "8029"
+    },
+    {
+      "_name": "ProMicro compatible nRF52840",
+      "vid": "239A",
+      "pid": "0029"
+    },
+    {
+      "_name": "ProMicro compatible nRF52840",
+      "vid": "239A",
+      "pid": "002A"
+    },
+    {
+      "_name": "ProMicro compatible nRF52840",
+      "vid": "239A",
+      "pid": "802A"
+    },
+    {
+      "_name": "LilyGo T-Watch 2020 V3",
+      "vid": "303A",
+      "pid": "1001"
+    },
+    {
+      "_name": "LilyGo T-Watch 2020 V3",
+      "vid": "303A",
+      "pid": "0002"
+    },
+    {
+      "_name": "CDEBYTE EoRa-S3",
+      "vid": "303A",
+      "pid": "1001"
+    },
+    {
+      "_name": "BPI-PicoW-S3 (8 MB FLASH, 2 MB PSRAM)",
+      "vid": "303A",
+      "pid": "1001"
+    },
+    {
+      "_name": "Heltec Vision Master E213",
+      "vid": "303A",
+      "pid": "1001"
+    },
+    {
+      "_name": "Heltec Vision Master E213",
+      "vid": "303A",
+      "pid": "0002"
+    },
+    {
+      "_name": "Waveshare ESP32-S3-Pico (16 MB FLASH, 2 MB PSRAM)",
+      "vid": "303A",
+      "pid": "1001"
+    },
+    {
+      "_name": "BQ nRF52840",
+      "vid": "239A",
+      "pid": "8029"
+    },
+    {
+      "_name": "BQ nRF52840",
+      "vid": "239A",
+      "pid": "0029"
+    },
+    {
+      "_name": "BQ nRF52840",
+      "vid": "239A",
+      "pid": "002A"
+    },
+    {
+      "_name": "BQ nRF52840",
+      "vid": "239A",
+      "pid": "802A"
+    },
+    {
+      "_name": "Clone ESP32-S3-DevKitC-1 v1.1 (16 MB FLASH, 8 MB PSRAM)",
+      "vid": "303A",
+      "pid": "1001"
+    },
+    {
+      "_name": "Espressif Systems LilyGO T-Deck (16 MB FLASH, 8 MB PSRAM)",
+      "vid": "303A",
+      "pid": "1001"
+    },
+    {
+      "_name": "Heltec Vision Master E290",
+      "vid": "303A",
+      "pid": "1001"
+    },
+    {
+      "_name": "Heltec Vision Master E290",
+      "vid": "303A",
+      "pid": "0002"
+    },
+    {
+      "_name": "unPhone",
+      "vid": "16D0",
+      "pid": "1178"
+    },
+    {
+      "_name": "unPhone",
+      "vid": "303a",
+      "pid": "1001"
+    },
+    {
+      "_name": "MINEWSEMI_MS24SF1_SX1262",
+      "vid": "239A",
+      "pid": "8029"
+    },
+    {
+      "_name": "MINEWSEMI_MS24SF1_SX1262",
+      "vid": "239A",
+      "pid": "0029"
+    },
+    {
+      "_name": "MINEWSEMI_MS24SF1_SX1262",
+      "vid": "239A",
+      "pid": "002A"
+    },
+    {
+      "_name": "MINEWSEMI_MS24SF1_SX1262",
+      "vid": "239A",
+      "pid": "802A"
+    },
+    {
+      "_name": "LilyGo TBeam-S3-Core",
+      "vid": "303A",
+      "pid": "1001"
+    },
+    {
+      "_name": "Heltec Wireless Tracker",
+      "vid": "303A",
+      "pid": "1001"
+    },
+    {
+      "_name": "seeed-xiao-s3",
+      "vid": "2886",
+      "pid": "0059"
+    },
+    {
+      "_name": "Seeed WIO WM1110",
+      "vid": "239A",
+      "pid": "8029"
+    },
+    {
+      "_name": "Seeed WIO WM1110",
+      "vid": "239A",
+      "pid": "0029"
+    },
+    {
+      "_name": "Seeed WIO WM1110",
+      "vid": "239A",
+      "pid": "002A"
+    },
+    {
+      "_name": "Seeed WIO WM1110",
+      "vid": "239A",
+      "pid": "802A"
+    },
+    {
+      "_name": "Seeed Xiao BLE Sense",
+      "vid": "239A",
+      "pid": "810B"
+    },
+    {
+      "_name": "Seeed Xiao BLE Sense",
+      "vid": "239A",
+      "pid": "010B"
+    },
+    {
+      "_name": "Seeed Xiao BLE Sense",
+      "vid": "239A",
+      "pid": "810C"
+    },
+    {
+      "_name": "icarus",
+      "vid": "2886",
+      "pid": "0059"
+    },
+    {
+      "_name": "nRF52840 Dongle",
+      "vid": "239A",
+      "pid": "8029"
+    },
+    {
+      "_name": "nRF52840 Dongle",
+      "vid": "239A",
+      "pid": "0029"
+    },
+    {
+      "_name": "nRF52840 Dongle",
+      "vid": "239A",
+      "pid": "002A"
+    },
+    {
+      "_name": "nRF52840 Dongle",
+      "vid": "239A",
+      "pid": "802A"
+    },
+    {
+      "_name": "WisCore RAK4631 Board",
+      "vid": "239A",
+      "pid": "8029"
+    },
+    {
+      "_name": "WisCore RAK4631 Board",
+      "vid": "239A",
+      "pid": "0029"
+    },
+    {
+      "_name": "WisCore RAK4631 Board",
+      "vid": "239A",
+      "pid": "002A"
+    },
+    {
+      "_name": "WisCore RAK4631 Board",
+      "vid": "239A",
+      "pid": "802A"
+    },
+    {
+      "_name": "BQ Station G2",
+      "vid": "303A",
+      "pid": "1001"
+    },
+    {
+      "_name": "Seeed T1000-E",
+      "vid": "239A",
+      "pid": "8029"
+    },
+    {
+      "_name": "Seeed T1000-E",
+      "vid": "239A",
+      "pid": "0029"
+    },
+    {
+      "_name": "Seeed T1000-E",
+      "vid": "239A",
+      "pid": "002A"
+    },
+    {
+      "_name": "Seeed T1000-E",
+      "vid": "239A",
+      "pid": "802A"
+    },
+    {
+      "_name": "LilyGo TLora-T3S3-V1",
+      "vid": "303A",
+      "pid": "1001"
+    },
+    {
+      "_name": "Adafruit Bluefruit nRF52832 Feather",
+      "vid": "239A",
+      "pid": "8029"
+    },
+    {
+      "_name": "Adafruit Bluefruit nRF52832 Feather",
+      "vid": "239A",
+      "pid": "0029"
+    },
+    {
+      "_name": "Adafruit Bluefruit nRF52832 Feather",
+      "vid": "239A",
+      "pid": "002A"
+    },
+    {
+      "_name": "Adafruit Bluefruit nRF52832 Feather",
+      "vid": "239A",
+      "pid": "802A"
+    },
+    {
+      "_name": "WisBlock RAK11300",
+      "vid": "2E8A",
+      "pid": "00C0"
+    },
+    {
+      "_name": "WisBlock RAK11300",
+      "vid": "2E8A",
+      "pid": "000A"
+    },
+    {
+      "_name": "Seeed Studio SenseCAP Indicator",
+      "vid": "1A86",
+      "pid": "7523"
+    },
+    {
+      "_name": "Clone ESP32-S3-DevKitC-1 v1.1 (16 MB FLASH, 8 MB PSRAM)",
+      "vid": "303A",
+      "pid": "1001"
+    },
+    {
+      "_name": "Minesemi ME25LS01",
+      "vid": "239A",
+      "pid": "8029"
+    },
+    {
+      "_name": "Minesemi ME25LS01",
+      "vid": "239A",
+      "pid": "0029"
+    },
+    {
+      "_name": "Minesemi ME25LS01",
+      "vid": "239A",
+      "pid": "002A"
+    },
+    {
+      "_name": "Minesemi ME25LS01",
+      "vid": "239A",
+      "pid": "802A"
+    }
+  ],
   "version": "0.1.0",
-  "zeroconf": ["_meshtastic._tcp.local.", "_http._tcp.local."]
+  "zeroconf": [
+    "_meshtastic._tcp.local.",
+    "_http._tcp.local."
+  ]
 }

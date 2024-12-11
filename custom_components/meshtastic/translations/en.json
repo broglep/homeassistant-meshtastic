@@ -49,6 +49,15 @@
           "serial_port": "Path to serial port, e.g. /dev/ttyUSB0"
         }
       },
+      "discovery_usb_confirm": {
+        "description": "Connect via Serial",
+        "data": {
+          "serial_port": "Serial Port"
+        },
+        "data_description": {
+          "serial_port": "Path to serial port, e.g. /dev/ttyUSB0"
+        }
+      },
       "reconfigure": {
       },
       "node": {
