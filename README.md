@@ -59,11 +59,11 @@ Even though integration is classified as `local_polling` it predominantly operat
 as soon as new state is available. Polling is only used as fallback should the push mechanism stop working.
 
 ### [Notification](https://www.home-assistant.io/integrations/notify/)
-All nodes from the gateway's node database are available as notification targets.
-Channels are available as targets as well. 
-
-Use this method as preferred way to send messages when you don't need control over the details 
+Using notification platform and the generated `notify.mesh_*` entities is the recommended way to send messages to the mesh when you don't need control over all the details 
 (which gateway to use, acknowledgements, etc.)
+
+Depending on your needs, all nodes from the gateway's node database as well as the channels can be made available as notification targets.
+
 
 Note: Support is based on new [entity notification platform](https://developers.home-assistant.io/blog/2024/04/10/new-notify-entity-platform/), 
 for an example on how to use it, see [official documentation](https://www.home-assistant.io/integrations/notify/#example-with-the-entity-platform-notify-action).
@@ -90,9 +90,9 @@ it is still busy with receiving / sending other mesh messages.
 
 #### Examples
 <details>
-<summary>Reply back after message received from device on arbitrary channel (including direct message) </summary>
+<summary>Reply back after message received from predefined device on arbitrary channel (including direct message) </summary>
 
-``` 
+```yaml
 - id: '1800000042000'
   alias: Ping Sample
   description: 'Reply back after message from device'
@@ -111,10 +111,89 @@ it is still busy with receiving / sending other mesh messages.
 ```
 
 </details>
-<details>
-<summary>Handling incoming text messages from any node</summary>
 
-This integration supports the creation of Home Assistant automations that can handle incoming text messages from any public node and replay to these messages. This is useful if to want to reply to incoming direct messages with a standard message, use a LLM or handle various commands with automations.
+<details>
+<summary>Echo incoming channel text messages from any node with gateway device trigger</summary>
+
+```yaml
+- id: '1735857524502'
+  alias: Echo Channel Message
+  description: ''
+  triggers:
+  - domain: meshtastic
+    device_id: 16efde6990a6a09903153abb8624fe38
+    type: channel_message.received
+    entity_id: meshtastic.gateway_brig_channel_primary
+    trigger: device
+  conditions: []
+  actions:
+  - delay:
+    seconds: 5
+  - action: meshtastic.broadcast_channel_message
+    metadata: {}
+    data:
+      ack: true
+      channel: meshtastic.gateway_brig_channel_primary
+      message: 'ECHO: {{ trigger.event.data.message }}'
+  mode: single
+```
+</details>
+
+<details>
+<summary>Advanced: Handling incoming text messages from any node without notification platform and its entities</summary>
+
+```yaml
+- id: '1735852176270'
+  alias: Echo on Channel Message (without Notify Platform)
+  description: 'Only from gateway with node id 3771721320'
+  triggers:
+  - trigger: event
+    event_type: meshtastic_api_text_message
+    event_data:
+      data:
+        to:
+          node:
+          channel: 1
+        gateway: 3771721320
+  conditions: []
+  actions:
+  - delay:
+      seconds: 5
+  - action: meshtastic.send_text
+    data:
+      ack: true
+      text: 'ECHO: {{ trigger.event.data.data.message }}'
+      from: '{{ trigger.event.data.data.gateway }}'
+      channel: '{{ trigger.event.data.data.to.channel }}'
+  mode: single
+- id: '1735852176271'
+  alias: Echo on Direct Message (without Notify Platform)
+  description: 'Only from gateway with node id 3771721320'
+  triggers:
+  - trigger: event
+    event_type: meshtastic_api_text_message
+    event_data:
+      data:
+        to:
+          node: 3771721320
+          channel:
+        gateway: 3771721320
+  conditions: []
+  actions:
+  - delay:
+      seconds: 5
+  - action: meshtastic.send_text
+    data:
+      ack: true
+      text: 'ECHO: {{ trigger.event.data.data.message }}'
+      from: '{{ trigger.event.data.data.gateway }}'
+      to: '{{ trigger.event.data.data.from }}'
+  mode: single
+```
+
+If you don't want to use the recommend notification platform for sending messages (e.g. if you don't want to clutter your Home Assistant instance with potentially hundreds of notify mesh entities), 
+you can still handle incoming text messages from any public node and reply to these messages. 
+This is useful if to want to reply to incoming direct messages with a standard message, use a LLM or handle various commands with automations.
 
 To do this, create a new Home Assistant automation that triggers on "Manual Events" and put `meshtastic_api_text_message` as the "Event Type". This will cause this automation to get triggerred on all incoming channel and direct messages. You will get events that include this information:
 
@@ -128,10 +207,15 @@ trigger:
         to:
           node: null
           channel: 0
+        gateway: 862525748
         message: Sample Message
 ```
 
-From is the NodeID of the sender of the message, to will have a node value if direct, or a channel number if the message is directed at the channel. You can create conditions in the automation to filter out the incoming messages you want, for example to filter out messages addressed to your node, use this condition with your nodeid.
+From contains the node id of the sender of the message, to will have the node id of the gateway for direct messages, or a gateway channel id if the message is directed at the channel. 
+Note that the channel id is dependent on the gateway node, so make sure you are using the proper gateway node when replying using that channel id. 
+
+You can create conditions in the automation to filter out the incoming messages you want or you can directly filter in the trigger.
+For example to filter out messages addressed to your gateway node, use this condition with your node id.
 
 ```
 {{ trigger.event.data.data.to.node == 862525748 }}
@@ -149,15 +233,15 @@ You can also forward these messages as notifications to your phone, etc. For exa
 Meshtastic message from ({{ trigger.event.data.data.from }}): {{ trigger.event.data.data.message }}
 ```
 
-To reply to a text message in this situation, add a 2 second or more delay action and then an action called `Meshtastic 'Send Text'` to your automation. You need to add a short delay to make sure your Meshtastic device is idle before replying. Change the `Meshtastic 'Send Text'` action to edit in yaml and change the `to`, `from` and `text` values to somethign like his:
+To reply to a text message in this situation, add a 2 second or more delay action and then an action called `Meshtastic 'Send Text'` to your automation. You need to add a short delay to make sure your Meshtastic device is idle before replying. Change the `Meshtastic 'Send Text'` action to edit in yaml and change the `to`, `from` and `text` values to something like his:
 
 ```
 action: meshtastic.send_text
 metadata: {}
 data:
   ack: false
+  from: "{{ trigger.event.data.data.gateway }}"
   to: "{{ trigger.event.data.data.from }}"
-  from: "{{ trigger.event.data.data.to.node }}"
   text: "ECHO: {{ trigger.event.data.data.message }}"
 ```
 
