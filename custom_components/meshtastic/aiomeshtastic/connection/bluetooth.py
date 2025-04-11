@@ -49,6 +49,7 @@ class BluetoothConnection(ClientApiConnection):
         self._ble_log: BleakGATTCharacteristic | None
         self._write_lock = asyncio.Lock()
         self._last_packet_number = None
+        self._force_read_event = asyncio.Event()
 
     async def _connect(self) -> None:
         self._bleak_client = BleakClient(
@@ -91,10 +92,61 @@ class BluetoothConnection(ClientApiConnection):
     def is_connected(self) -> bool:
         return self._bleak_client.is_connected
 
+    async def _handle_notify_wait(  # noqa: PLR0913
+        self,
+        packet_num_queue: asyncio.Queue,
+        force_read_event: asyncio.Event,
+        notify_timeout_duration: int,
+        notify_timeout_count: int,
+        max_notify_timeouts_before_restart: int,
+        restart_notify_func: callable,
+    ) -> tuple[bool, int]:
+        """Wait for packet notification or force read event."""
+        wait_notify = asyncio.create_task(packet_num_queue.get(), name="wait_notify")
+        wait_force_read = asyncio.create_task(force_read_event.wait(), name="wait_force_read")
+
+        done, pending = await asyncio.wait(
+            {wait_notify, wait_force_read},
+            timeout=notify_timeout_duration,
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+
+        # Ensure pending tasks are cancelled before proceeding
+        for task in pending:
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
+
+        continue_active_read = False
+        if wait_force_read in done:
+            self._logger.debug("Force read event received. Continuing loop for active read.")
+            force_read_event.clear()
+            notify_timeout_count = 0  # Reset timeout counter
+            continue_active_read = True
+        elif wait_notify in done:
+            self._logger.debug("Packet notification received. Will attempt read.")
+            _ = wait_notify.result()
+            notify_timeout_count = 0  # Reset timeout counter
+        else:  # Timeout occurred
+            notify_timeout_count += 1
+            if notify_timeout_count > max_notify_timeouts_before_restart:
+                self._logger.debug(
+                    "No bluetooth notification for %d times after %ds timeout, restarting notifications",
+                    notify_timeout_count,
+                    max_notify_timeouts_before_restart,
+                )
+                notify_timeout_count = 0
+                await restart_notify_func()
+            # continue with active read
+            continue_active_read = True
+
+        return continue_active_read, notify_timeout_count
+
     async def _packet_stream(self) -> AsyncGenerator[mesh_pb2.FromRadio, Any]:  # noqa: PLR0915
         if not self.is_connected:
             return
         packet_num_queue = asyncio.Queue()
+        force_read_event = self._force_read_event
 
         def notification_handler(_: BleakGATTCharacteristic, data: bytearray) -> None:
             nums = struct.unpack("<I", data)
@@ -135,27 +187,22 @@ class BluetoothConnection(ClientApiConnection):
                 if not isinstance(packet, bytes):
                     packet = bytes(packet)
                 if packet == b"":
-                    # no more packets available, waiting for notification.
+                    # no more packets available, waiting for notification or force_read event.
                     # if we do not receive bluetooth notifications for an extended period of time, this could be an
                     # indication of issue with bluetooth stack, so we try to do an active read. This will either trigger
                     # an error or help resume sending of data by the firmware. If this happens too often, we try to
                     # re-start notifications.
-                    try:
-                        await asyncio.wait_for(packet_num_queue.get(), timeout=notify_timeout_duration)
-                    except TimeoutError:
-                        notify_timeout_count += 1
-                        if notify_timeout_count > max_notify_timeouts_before_restart:
-                            self._logger.debug(
-                                "No bluetooth notification for %d times after %ds timeout, restarting notifications",
-                                notify_timeout_count,
-                                max_notify_timeouts_before_restart,
-                            )
-                            notify_timeout_count = 0
-                            await restart_notify()
-                        # continue with active read
+                    continue_active_read, notify_timeout_count = await self._handle_notify_wait(
+                        packet_num_queue,
+                        force_read_event,
+                        notify_timeout_duration,
+                        notify_timeout_count,
+                        max_notify_timeouts_before_restart,
+                        restart_notify,
+                    )
+                    if continue_active_read:
                         continue
-                    else:
-                        notify_timeout_count = 0
+
                 elif notify_timeout_count > 0:
                     self._logger.debug(
                         "Read returned packet after ble notify timeout, maybe notifications from device have stopped"
@@ -177,6 +224,16 @@ class BluetoothConnection(ClientApiConnection):
     async def _send_packet(self, data: bytes) -> bool:
         if not self._bleak_client.is_connected:
             raise ClientApiNotConnectedError
+
+        # Check if this packet requires a forced read
+        try:
+            to_radio = mesh_pb2.ToRadio()
+            to_radio.ParseFromString(data)
+            if to_radio.HasField("want_config_id"):
+                self._logger.debug("want_config_id detected, setting force read event.")
+                self._force_read_event.set()
+        except message.DecodeError:
+            self._logger.warning("Could not parse ToRadio packet in _send_packet to check for want_config_id.")
 
         async with self._write_lock:
             try:
